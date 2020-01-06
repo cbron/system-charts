@@ -97,25 +97,6 @@ spec:
 {{- else }}
 {{ toYaml .Values.global.defaultResources | indent 10 }}
 {{- end }}
-      - name: kiali-proxy
-        image: "{{ template "system_default_registry" . }}{{ .Values.global.nginxProxy.repository }}:{{ .Values.global.nginxProxy.tag }}"
-        args:
-        - nginx
-        - -g
-        - daemon off;
-        - -c
-        - /nginx/nginx.conf
-        ports:
-        - name: http
-          containerPort: 80
-          protocol: TCP
-        volumeMounts:
-        - mountPath: /nginx/
-          name: kiali-nginx
-        {{- if and .Values.resources .Values.resources.proxy }}
-        resources:
-{{ toYaml .Values.resources.proxy | indent 10 }}
-        {{- end }}
       volumes:
       - name: kiali-configuration
         configMap:
@@ -126,13 +107,6 @@ spec:
 {{- if not .Values.security.enabled }}
           optional: true
 {{- end }}
-      - name: kiali-nginx
-        configMap:
-          name: kiali-nginx
-          items:
-          - key: nginx.conf
-            mode: 438
-            path: nginx.conf
       - name: kiali-secret
         secret:
           secretName: {{ .Values.dashboard.secretName }}
