@@ -6,7 +6,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["services/proxy"]
-    resourceNames: ["http:kiali-http:80", "http:tracing:80", "http:grafana:80", "http:prometheus-http:80"]
+    resourceNames: ["http:kiali:20001", "http:tracing:80", "http:grafana:80", "http:prometheus-http:80"]
     verbs: ["get", "watch", "list"]
 
 ---
