@@ -58,10 +58,10 @@ spec:
 {{- if $spec.sds }}
 {{- if $spec.sds.enabled }}
         - name: ingress-sds
-{{- if contains "/" $spec.sds.image }}
-          image: "{{ $spec.sds.image }}"
+{{- if contains "/" $.Values.global.nodeagent.image }}
+          image: "{{ $.Values.global.nodeagent.image }}"
 {{- else }}
-          image: "{{ $.Values.global.hub }}/{{ $spec.sds.image }}:{{ $.Values.global.tag }}"
+          image: "{{ $.Values.global.hub }}/{{ $.Values.global.nodeagent.image }}:{{ $.Values.global.tag }}"
 {{- end }}
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
           resources:

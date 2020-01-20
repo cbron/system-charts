@@ -20,7 +20,7 @@ global:
 
 nodeagent:
   enabled: true
-  image: node-agent-k8s
+  image: istio-node-agent-k8s
   env:
     CA_PROVIDER: "GoogleCA"
     CA_ADDR: "meshca.googleapis.com:443"

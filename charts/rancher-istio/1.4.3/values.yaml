@@ -23,6 +23,7 @@ gateways:
 #
 sidecarInjectorWebhook:
   image: istio-sidecar_injector
+  tag: 1.4.3
   enabled: true
 
 #
@@ -31,6 +32,7 @@ sidecarInjectorWebhook:
 #
 galley:
   image: istio-galley
+  tag: 1.4.3
   enabled: true
 
 #
@@ -39,6 +41,7 @@ galley:
 # @see charts/mixer/values.yaml for all values
 mixer:
   image: istio-mixer
+  tag: 1.4.3
   policy:
     # if policy is enabled the global.disablePolicyChecks has affect.
     enabled: true
@@ -51,6 +54,7 @@ mixer:
 # @see charts/pilot/values.yaml
 pilot:
   image: istio-pilot
+  tag: 1.4.3
   enabled: true
 
 #
@@ -58,6 +62,7 @@ pilot:
 #
 security:
   image: istio-citadel
+  tag: 1.4.3
   enabled: true
 
 #
@@ -65,6 +70,7 @@ security:
 #
 nodeagent:
   image: istio-node-agent-k8s
+  tag: 1.4.3
   enabled: false
 
 #
@@ -72,6 +78,7 @@ nodeagent:
 #
 grafana:
   image: grafana-grafana
+  tag: 6.4.3
   enabled: false
 
 #
@@ -79,6 +86,7 @@ grafana:
 #
 prometheus:
   image: prom-prometheus
+  tag: v2.12.0
   enabled: false
 
 #
@@ -88,9 +96,11 @@ tracing:
   jaeger:
     hub: docker.io/rancher
     image: jaegertracing-all-in-one
+    tag: 1.14
   zipkin:
     hub: docker.io/rancher
     image: openzipkin-zipkin
+    tag: 2.14.2
   enabled: false
 
 #

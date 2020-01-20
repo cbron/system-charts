@@ -12,7 +12,7 @@ global:
 
 nodeagent:
   enabled: true
-  image: node-agent-k8s
+  image: istio-node-agent-k8s
   env:
     # The IP address and the port number of a publicly accessible example Vault server.
     CA_ADDR: "https://34.83.129.211:8200"
