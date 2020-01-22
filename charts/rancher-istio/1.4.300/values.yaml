@@ -42,10 +42,9 @@ galley:
 mixer:
   repository: rancher/istio-mixer
   tag: 1.4.3
-  enabled: true
   policy:
     # if policy is enabled the global.disablePolicyChecks has affect.
-    enabled: true
+    enabled: false
 
   telemetry:
     enabled: true
