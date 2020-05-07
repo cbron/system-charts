@@ -7,6 +7,32 @@
 #
 enabled: true
 
+istio-ig-domain1:
+  enabled: true
+  sds:
+    enabled: false
+  labels:
+    domain: "domain1"
+    istio: "istio-ig-domain1"
+  autoscaleEnabled: true
+  autoscaleMin: 2
+  autoscaleMax: 4
+  podAntiAffinityTermLabelSelector:
+    - key: istio
+      operator: In
+      values: "istio-ig-domain1"
+      topologyKey: "kubernetes.io/hostname"
+  cpu:
+    targetAverageUtilization: 80
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http-domain1-80
+  - port: 443
+    targetPort: 443
+    name: http-domain1-443
+
 istio-ingressgateway:
   enabled: true
   #
