@@ -15,9 +15,25 @@ set -e
 # ./
 # Requirement: yq(https://github.com/mikefarah/yq)
 
+
+VERSION="$1"
+R_VERSION="$1"00  # this does the rancher style 1.4.300 version
+echo $VERSION
+echo $FULL_VERSION
+
+if [ $2 = "validate" ]; then
+	printf "==============\n\n Non-rancher image specs that need to be changed (likely duplicate listings):\n\n==============\n\n"
+	echo charts/rancher-istio/$R_VERSION/*.yaml
+	grep -r --color=always --include "*.yaml" Values.global.hub charts/rancher-istio/$R_VERSION/
+	grep -r --color=always --include "*.yaml" .Values.image charts/rancher-istio/$R_VERSION/
+	grep -r --color=always --include "*.yaml" "image: \"{{ .Values" charts/rancher-istio/$R_VERSION/
+	grep -r --color=always --include "*.yaml" "image: \"{{ \\$" charts/rancher-istio/$R_VERSION/
+	exit 0
+fi
+
 # Download istio release
-mkdir -p charts/rancher-istio/${1}
-curl -sL https://storage.googleapis.com/istio-release/releases/${1}/charts/istio-${1}.tgz | tar xvzf - -C charts/rancher-istio/${1} --strip 1
+mkdir -p charts/rancher-istio/$R_VERSION
+curl -sL https://storage.googleapis.com/istio-release/releases/$VERSION/charts/istio-$VERSION.tgz | tar xvzf - -C charts/rancher-istio/$R_VERSION --strip 1
 
 if [[ -n "$VANILLA" ]]; then
   exit 0
@@ -25,16 +41,16 @@ fi
 
 # Configure istio-init CRD
 # The following script downloads istio-init CRD helm charts, extract these into CRD templates and adds crd-install hooks.
-mkdir -p charts/rancher-istio/${1}/charts/istio-init
-curl -sL https://storage.googleapis.com/istio-release/releases/${1}/charts/istio-init-${1}.tgz | tar xvzf - -C charts/rancher-istio/${1}/charts/istio-init --strip 1
+mkdir -p charts/rancher-istio/$R_VERSION/charts/istio-init
+curl -sL https://storage.googleapis.com/istio-release/releases/${1}/charts/istio-init-$VERSION.tgz | tar xvzf - -C charts/rancher-istio/$R_VERSION/charts/istio-init --strip 1
 
-for file in charts/rancher-istio/${1}/charts/istio-init/files/*
+for file in charts/rancher-istio/$R_VERSION/charts/istio-init/files/*
 do
-sed -i '$d' ${file}
-yq w -d'*' ${file} metadata.annotations\[helm.sh/hook\] crd-install > charts/rancher-istio/${1}/templates/${file##*/}
+sed -i .yaml '$d' ${file}
+yq w -d'*' ${file} metadata.annotations\[helm.sh/hook\] crd-install,pre-upgrade > charts/rancher-istio/$R_VERSION/templates/${file##*/}
 done
 
-for file in charts/rancher-istio/${1}/templates/crd-certmanager-*.yaml
+for file in charts/rancher-istio/$R_VERSION/templates/crd-certmanager-*.yaml
 do
 content=$(cat $file)
 cat > ${file} << EOF
@@ -43,31 +59,55 @@ $content
 {{- end }}
 EOF
 done
-rm -r charts/rancher-istio/${1}/charts/istio-init
+rm -r charts/rancher-istio/$R_VERSION/charts/istio-init
 
 # Add question.yaml, make need to update minimum rancher version
 RANCHER_MIN_VERSION="2.3.4-rc1"
 echo "Current rancher min version is set to $RANCHER_MIN_VERSION"
 
-cat > charts/rancher-istio/${1}/questions.yaml << EOF
+cat > charts/rancher-istio/$R_VERSION/questions.yaml << EOF
 labels:
   rancher.istio.v${1}: ${1}
 rancher_min_version: $RANCHER_MIN_VERSION
 EOF
 
+# add helpers
+cat <<EOF >> charts/rancher-istio/$R_VERSION/templates/_helpers.tpl
+
+{{- define "system_default_registry" -}}
+{{- if .Values.global.systemDefaultRegistry -}}
+{{- printf "%s/" .Values.global.systemDefaultRegistry -}}
+{{- else -}}
+{{- "" -}}
+{{- end -}}
+{{- end -}}
+EOF
+
 # Replace the name of the chart
-sed -i 's/name: istio/name: rancher-istio/g' charts/rancher-istio/${1}/Chart.yaml
+sed -i .yaml 's/name: istio/name: rancher-istio/g' charts/rancher-istio/$R_VERSION/Chart.yaml
 
 # Update kiali
-cp ./scripts/istio/deployment.yaml charts/rancher-istio/${1}/charts/kiali/templates/
-cp ./scripts/istio/kiali-console-configmap.yaml charts/rancher-istio/${1}/charts/kiali/templates/
+cp ./scripts/istio/deployment.yaml charts/rancher-istio/$R_VERSION/charts/kiali/templates/
+cp ./scripts/istio/kiali-console-configmap.yaml charts/rancher-istio/$R_VERSION/charts/kiali/templates/
 
 # Replace istio kubectl images
-sed -i 's/"{{ .Values.global.hub }}\/kubectl:{{ .Values.global.tag }}"/"{{ .Values.global.hub }}\/istio-kubectl:{{ .Values.global.tag }}"/g' charts/rancher-istio/${1}/charts/security/templates/*.yaml
+sed -i .yaml 's/"{{ .Values.global.hub }}\/kubectl:{{ .Values.global.tag }}"/"{{ .Values.global.hub }}\/istio-kubectl:{{ .Values.global.tag }}"/g' charts/rancher-istio/$R_VERSION/charts/security/templates/*.yaml
+
+# replace coreDumpImage
+sed -i .yaml 's/{{ $.Values.global.proxy.enableCoreDumpImage }}/"{{ template "system_default_registry" $ }}{{ $.Values.global.proxy_init.repository }}:{{ $.Values.global.proxy_init.tag }}"/g' charts/rancher-istio/$R_VERSION/charts/gateways/templates/deployment.yaml 
 
 # Istio-values.yaml is rancher specific customization yaml
-cat ./scripts/istio/istio-values.yaml > charts/rancher-istio/${1}/values.yaml
-cat ./scripts/istio/istio-service-rbac.yaml > charts/rancher-istio/${1}/templates/istio-service-rbac.yaml
+cat ./scripts/istio/istio-values.yaml > charts/rancher-istio/$R_VERSION/values.yaml
+cat ./scripts/istio/istio-service-rbac.yaml > charts/rancher-istio/$R_VERSION/templates/istio-service-rbac.yaml
 
-# Replace tag
-sed -i 's/tag: 1.4.2/tag: '"${1}"'/g' charts/rancher-istio/${1}/values.yaml
+# Replace tag inside values.yaml
+sed -i .yaml 's/tag: tagreplace/tag: '"${1}"'/g' charts/rancher-istio/$R_VERSION/values.yaml
+
+echo "How to complete a new chart:
+  * Make a copy of the previous chart and commit. This way we can see all changes in single commit.
+  * Run this command to generate new chart (see instructions at top)
+  * check values.yaml for any changes from last release, as we copy a static file here
+  * Run this command again with extra arg 'validate', then fix any non-rancher image specs listed.
+  * helm template to see if there are errors
+  * Commit changes so there are now 2 commits, one for the copy and one for the changes.
+"
