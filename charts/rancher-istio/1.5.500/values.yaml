@@ -144,6 +144,15 @@ istiocoredns:
     tag: 0.2-istio-1.1
   enabled: false
 
+##
+# webhook cleanup necessary for move from 1.4 to 1.5
+##
+webhookCleanup:
+  image:
+    repository: cbron/istio-webhook-cleanup
+    tag: 0.1
+
+
 # Common settings used among istio subcharts.
 global:
 
