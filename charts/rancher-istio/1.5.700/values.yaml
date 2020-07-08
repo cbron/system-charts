@@ -148,8 +148,8 @@ istiocoredns:
 #
 onefiveMigration:
   enabled: true
-  repository: rancher/istio-1.5-migration
-  tag: 0.1.0
+  repository: cbron/istio-1.5-migration
+  tag: dev
 
 # Common settings used among istio subcharts.
 global:
