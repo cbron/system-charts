@@ -62,6 +62,7 @@ metadata:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "2"
 spec:
+  ttlSecondsAfterFinished: 300
   template:
     metadata:
       name: istio-onefive-migration
